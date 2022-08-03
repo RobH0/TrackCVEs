@@ -15,19 +15,16 @@ import urllib.request
 import zipfile
 
 
-def readVendorsFile(vendor_filename="vendors.txt"):
+def read_vendor_file(vendor_filename="vendors.txt"):
     vendor_list = []
 
     with open(vendor_filename) as vendors:
         vendor_list = vendors.read().splitlines()
-        
+
     return vendor_list
 
 
-
-
-
-def getCVEData():
+def get_cve_data():
 
     print("Downloading the yearly NVD CVE feeds.")
 
@@ -48,34 +45,32 @@ def getCVEData():
     cve_zip_file = zipfile.ZipFile(io.BytesIO(cve_recent_feed_file), mode='r')
     unzipped_cve_data = cve_zip_file.open("nvdcve-1.1-recent.json")
 
-
     cve_json_data = json.load(unzipped_cve_data)
 
     return cve_json_data
 
-def sortData():
+
+def sort_data(cve_json_data):
+    cve_dictionary = {}
     for cve in cve_json_data['CVE_Items']:
         cve_id = cve['cve']['CVE_data_meta']['ID']
         cve_pub_date = cve['publishedDate'].split('T')[0]
         cve_last_mod = cve['lastModifiedDate'].split('T')[0]
         for cve_desc_item in cve['cve']['description']['description_data']:
-            #print("new item")
-            #print(cve_desc_item)
             if cve_desc_item['lang'] == 'en':
                 cve_desc = cve_desc_item['value']
 
                 if "** REJECT **" not in cve_desc:
-                    break#print(cve_id + "\n  Published date:" + cve_pub_date + "\n  Last modified: " + cve_last_mod + "\n  Description: " + cve_desc + "\n\n")
+                    print(cve_id + "\n  Published date:" + cve_pub_date + "\n  Last modified: " +
+                          cve_last_mod + "\n  Description: " + cve_desc + "\n\n")
 
-        #for cve_impact_item in cve['cve']['configurations']['impact']:
-        #    print(cve_impact_item)
+    return cve_dictionary
 
-#print(cve_jason_data['CVE_Items'][50])
 
 if __name__ == '__main__':
-    cve_json_data = getCVEData()
-    readVendorsFile()
-    sortData()
+    cve_json_data = get_cve_data()
+    vendor_list = read_vendor_file()
+    cve_dictionary = sort_data(cve_json_data)
 
 """
 example json cve format
