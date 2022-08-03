@@ -15,49 +15,57 @@ import urllib.request
 import zipfile
 
 
-print("Downloading the yearly NVD CVE feeds.")
+def getCVEData():
 
-cve_recent_url = "https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-recent.json.zip"
-cve_recent_feed_file = ''
+    print("Downloading the yearly NVD CVE feeds.")
 
-# Attempts to download the most recent CVE feed in json format.
-try:
-    with urllib.request.urlopen(cve_recent_url) as cves:
-        cve_recent_feed_file = cves.read()
-    print("Successfully downloaded recent CVE feed")
-except Exception as e:
-    print(e)
-    print("Error attempting to download the NVD recent CVE feed.")
-    sys.exit(0)
+    cve_recent_url = "https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-recent.json.zip"
+    cve_recent_feed_file = ''
 
-# Unzips the cve feed file
-cve_zip_file = zipfile.ZipFile(io.BytesIO(cve_recent_feed_file), mode='r')
-unzipped_cve_data = cve_zip_file.open("nvdcve-1.1-recent.json")
+    # Attempts to download the most recent CVE feed in json format.
+    try:
+        with urllib.request.urlopen(cve_recent_url) as cves:
+            cve_recent_feed_file = cves.read()
+        print("Successfully downloaded recent CVE feed")
+    except Exception as e:
+        print(e)
+        print("Error attempting to download the NVD recent CVE feed.")
+        sys.exit(0)
 
-
-cve_jason_data = json.load(unzipped_cve_data)
-
+    # Unzips the cve feed file
+    cve_zip_file = zipfile.ZipFile(io.BytesIO(cve_recent_feed_file), mode='r')
+    unzipped_cve_data = cve_zip_file.open("nvdcve-1.1-recent.json")
 
 
-for cve in cve_jason_data['CVE_Items']:
-    cve_id = cve['cve']['CVE_data_meta']['ID']
-    cve_pub_date = cve['publishedDate'].split('T')[0]
-    cve_last_mod = cve['lastModifiedDate'].split('T')[0]
-    for cve_desc_item in cve['cve']['description']['description_data']:
-        #print("new item")
-        #print(cve_desc_item)
-        if cve_desc_item['lang'] == 'en':
-            cve_desc = cve_desc_item['value']
+    cve_json_data = json.load(unzipped_cve_data)
 
-            if "** REJECT **" not in cve_desc:
-                print(cve_id + "\n  Published date:" + cve_pub_date + "\n  Last modified: " + cve_last_mod + "\n  Description: " + cve_desc + "\n\n")
+    return cve_json_data
 
-    #for cve_impact_item in cve['cve']['configurations']['impact']:
-    #    print(cve_impact_item)
+
+
+
+def sortData():
+    for cve in cve_json_data['CVE_Items']:
+        cve_id = cve['cve']['CVE_data_meta']['ID']
+        cve_pub_date = cve['publishedDate'].split('T')[0]
+        cve_last_mod = cve['lastModifiedDate'].split('T')[0]
+        for cve_desc_item in cve['cve']['description']['description_data']:
+            #print("new item")
+            #print(cve_desc_item)
+            if cve_desc_item['lang'] == 'en':
+                cve_desc = cve_desc_item['value']
+
+                if "** REJECT **" not in cve_desc:
+                    print(cve_id + "\n  Published date:" + cve_pub_date + "\n  Last modified: " + cve_last_mod + "\n  Description: " + cve_desc + "\n\n")
+
+        #for cve_impact_item in cve['cve']['configurations']['impact']:
+        #    print(cve_impact_item)
 
 #print(cve_jason_data['CVE_Items'][50])
 
-
+if __name__ == '__main__':
+    cve_json_data = getCVEData()
+    sortData()
 
 """
 example json cve format
