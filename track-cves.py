@@ -15,6 +15,18 @@ import urllib.request
 import zipfile
 
 
+def readVendorsFile(vendor_filename="vendors.txt"):
+    vendor_list = []
+
+    with open(vendor_filename) as vendors:
+        vendor_list = vendors.read().splitlines()
+        
+    return vendor_list
+
+
+
+
+
 def getCVEData():
 
     print("Downloading the yearly NVD CVE feeds.")
@@ -41,9 +53,6 @@ def getCVEData():
 
     return cve_json_data
 
-
-
-
 def sortData():
     for cve in cve_json_data['CVE_Items']:
         cve_id = cve['cve']['CVE_data_meta']['ID']
@@ -56,7 +65,7 @@ def sortData():
                 cve_desc = cve_desc_item['value']
 
                 if "** REJECT **" not in cve_desc:
-                    print(cve_id + "\n  Published date:" + cve_pub_date + "\n  Last modified: " + cve_last_mod + "\n  Description: " + cve_desc + "\n\n")
+                    break#print(cve_id + "\n  Published date:" + cve_pub_date + "\n  Last modified: " + cve_last_mod + "\n  Description: " + cve_desc + "\n\n")
 
         #for cve_impact_item in cve['cve']['configurations']['impact']:
         #    print(cve_impact_item)
@@ -65,6 +74,7 @@ def sortData():
 
 if __name__ == '__main__':
     cve_json_data = getCVEData()
+    readVendorsFile()
     sortData()
 
 """
