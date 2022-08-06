@@ -67,6 +67,23 @@ def sort_cve_data(cve_json_data):
                 cve_desc = cve_desc_item['value']
                 cve_dictionary[cve_id]['description'] = cve_desc
 
+        for key in cve['impact']:
+            if key == 'baseMetricV3':
+                cve_dictionary[cve_id]['exploitabilityScore'] = cve['impact']['baseMetricV3']['exploitabilityScore']
+                cve_dictionary[cve_id]['impactScore'] = cve['impact']['baseMetricV3']['impactScore']
+                cve_dictionary[cve_id]['baseScore'] = cve['impact']['baseMetricV3']['cvssV3']['baseScore']
+                cve_dictionary[cve_id]['baseSeverity'] = cve['impact']['baseMetricV3']['cvssV3']['baseSeverity']
+                cve_dictionary[cve_id]['attackVector'] = cve['impact']['baseMetricV3']['cvssV3']['attackVector']
+                cve_dictionary[cve_id]['attackComplexity'] = cve['impact']['baseMetricV3']['cvssV3']['attackComplexity']
+                cve_dictionary[cve_id]['privilegesRequired'] = cve['impact']['baseMetricV3']['cvssV3']['privilegesRequired']
+                cve_dictionary[cve_id]['userInteraction'] = cve['impact']['baseMetricV3']['cvssV3']['userInteraction']
+
+                # print(cve['impact']['baseMetricV3']['cvssV3']['scope'])
+                # print(cve['impact']['baseMetricV3']['cvssV3'].values())
+
+                # print(list(cve['impact']['baseMetricV3'].values()))
+                # cvssV3['version', 'vectorString', 'attackVector', 'attackComplexity', 'privilegesRequired', 'userInteraction', 'scope', 'confidentialityImpact', 'integrityImpact', 'availabilityImpact', 'baseScore', 'baseSeverity']
+                # dict_values(['3.1', 'CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H', 'NETWORK', 'LOW', 'NONE', 'NONE', 'UNCHANGED', 'HIGH', 'HIGH', 'HIGH', 9.8, 'CRITICAL'])
     return cve_dictionary
 
 
@@ -97,6 +114,7 @@ if __name__ == '__main__':
     filtered_cves = filter_cve_by_vendor(cve_dictionary, vendor_list)
     output_cves(filtered_cves)
 
+# https://nvd.nist.gov/vuln/detail/CVE-2022-23733  example vuln URL
 
 """
 example json cve format
