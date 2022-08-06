@@ -91,7 +91,7 @@ def filter_cve_by_vendor(cve_dictionary, vendor_list):
     filtered_cves = {}
     for vendor in vendor_list:
         for cve in cve_dictionary:
-            if vendor in cve_dictionary[cve]['description']:
+            if vendor.lower() in cve_dictionary[cve]['description'].lower():
                 filtered_cves[cve] = {}
                 filtered_cves[cve]['published'] = cve_dictionary[cve]['published']
                 filtered_cves[cve]['last_modified'] = cve_dictionary[cve]['last_modified']
