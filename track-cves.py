@@ -28,7 +28,7 @@ def read_vendor_file(vendor_filename="vendors.txt"):
 
 def get_cve_data():
 
-    print("Downloading the yearly NVD CVE feeds.")
+    print("Downloading the most recent CVE data.")
 
     cve_recent_url = "https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-recent.json.zip"
     cve_recent_feed_file = ''
@@ -84,6 +84,7 @@ def sort_cve_data(cve_json_data):
                 # print(list(cve['impact']['baseMetricV3'].values()))
                 # cvssV3['version', 'vectorString', 'attackVector', 'attackComplexity', 'privilegesRequired', 'userInteraction', 'scope', 'confidentialityImpact', 'integrityImpact', 'availabilityImpact', 'baseScore', 'baseSeverity']
                 # dict_values(['3.1', 'CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H', 'NETWORK', 'LOW', 'NONE', 'NONE', 'UNCHANGED', 'HIGH', 'HIGH', 'HIGH', 9.8, 'CRITICAL'])
+
     return cve_dictionary
 
 
@@ -93,18 +94,18 @@ def filter_cve_by_vendor(cve_dictionary, vendor_list):
         for cve in cve_dictionary:
             if vendor.lower() in cve_dictionary[cve]['description'].lower():
                 filtered_cves[cve] = {}
-                filtered_cves[cve]['published'] = cve_dictionary[cve]['published']
-                filtered_cves[cve]['last_modified'] = cve_dictionary[cve]['last_modified']
-                filtered_cves[cve]['description'] = cve_dictionary[cve]['description']
+                for key in cve_dictionary[cve]:
+                    filtered_cves[cve][key] = cve_dictionary[cve][key]
 
     return filtered_cves
 
 
 def output_cves(filtered_cves):
-    print("FILTERED CVEs:\n")
+    print("\nFILTERED CVEs:")
     for cve in filtered_cves:
-        print(cve + ":\nPublished: " + filtered_cves[cve]['published'] + "\nLast Modified: " +
-              filtered_cves[cve]['last_modified'] + "\nDescription: " + filtered_cves[cve]['description'] + "\n\n")
+        print("\n" + cve)
+        for key in filtered_cves[cve]:
+            print(key + ": " + str(filtered_cves[cve][key]))
 
 
 if __name__ == '__main__':
