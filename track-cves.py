@@ -1,12 +1,10 @@
 # track-cves.py
 
 # To implement:
-# 1. Download most recent cve data from nvd. Done
-# 2. Output only CVEs relating to specific vendors. Done
-# 3. Display impact info for cve.
-# 4. Sort CVEs by impact.
-# 5. Add parameters that ask for the user to specify relative time period cves should be displayed for.
-# 6. Use argparse to allow a user to specify a vendor file via command line arguments.
+# 1. Add parameters that ask for the user to specify relative time period cves should be displayed for.
+# 2. Use argparse to allow a user to specify a vendor file via command line arguments.
+# 3. Display NVD link with CVE.
+# 4. Refactor code.
 
 import argparse
 import datetime
@@ -78,13 +76,6 @@ def sort_cve_data(cve_json_data):
                 cve_dictionary[cve_id]['privilegesRequired'] = cve['impact']['baseMetricV3']['cvssV3']['privilegesRequired']
                 cve_dictionary[cve_id]['userInteraction'] = cve['impact']['baseMetricV3']['cvssV3']['userInteraction']
 
-                # print(cve['impact']['baseMetricV3']['cvssV3']['scope'])
-                # print(cve['impact']['baseMetricV3']['cvssV3'].values())
-
-                # print(list(cve['impact']['baseMetricV3'].values()))
-                # cvssV3['version', 'vectorString', 'attackVector', 'attackComplexity', 'privilegesRequired', 'userInteraction', 'scope', 'confidentialityImpact', 'integrityImpact', 'availabilityImpact', 'baseScore', 'baseSeverity']
-                # dict_values(['3.1', 'CVSS:3.1/AV:N/AC:L/PR:N/UI:N/S:U/C:H/I:H/A:H', 'NETWORK', 'LOW', 'NONE', 'NONE', 'UNCHANGED', 'HIGH', 'HIGH', 'HIGH', 9.8, 'CRITICAL'])
-
     return cve_dictionary
 
 
@@ -102,10 +93,34 @@ def filter_cve_by_vendor(cve_dictionary, vendor_list):
 
 def output_cves(filtered_cves):
     print("\nFILTERED CVEs:")
+
+    print("\nHigh Severity: ")
     for cve in filtered_cves:
-        print("\n" + cve)
-        for key in filtered_cves[cve]:
-            print(key + ": " + str(filtered_cves[cve][key]))
+        if filtered_cves[cve].get('baseSeverity') != None and filtered_cves[cve]['baseSeverity'] == 'HIGH':
+            print("\n" + cve)
+            for key in filtered_cves[cve]:
+                print(key + ": " + str(filtered_cves[cve][key]))
+
+    print("\nMedium Severity: ")
+    for cve in filtered_cves:
+        if filtered_cves[cve].get('baseSeverity') != None and filtered_cves[cve]['baseSeverity'] == 'MEDIUM':
+            print("\n" + cve)
+            for key in filtered_cves[cve]:
+                print(key + ": " + str(filtered_cves[cve][key]))
+
+    print("\nLow Severity: ")
+    for cve in filtered_cves:
+        if filtered_cves[cve].get('baseSeverity') != None and filtered_cves[cve]['baseSeverity'] == 'LOW':
+            print("\n" + cve)
+            for key in filtered_cves[cve]:
+                print(key + ": " + str(filtered_cves[cve][key]))
+
+    print("Unspecified Severity: ")
+    for cve in filtered_cves:
+        if filtered_cves[cve].get('baseSeverity') == None:
+            print("\n" + cve)
+            for key in filtered_cves[cve]:
+                print(key + ": " + str(filtered_cves[cve][key]))
 
 
 if __name__ == '__main__':
