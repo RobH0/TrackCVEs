@@ -1,12 +1,10 @@
 # track-cves.py
 
 # To implement:
-# 1. Download most recent cve data from nvd. Done
-# 2. Output only CVEs relating to specific vendors. Done
-# 3. Display impact info for cve.
-# 4. Sort CVEs by impact.
-# 5. Add parameters that ask for the user to specify relative time period cves should be displayed for.
-# 6. Use argparse to allow a user to specify a vendor file via command line arguments.
+# 1. Add parameters that ask for the user to specify relative time period cves should be displayed for.
+# 2. Use argparse to allow a user to specify a vendor file via command line arguments.
+# 3. Display NVD link with CVE.
+# 4. Refactor code.
 
 import argparse
 import datetime
@@ -28,7 +26,7 @@ def read_vendor_file(vendor_filename="vendors.txt"):
 
 def get_cve_data():
 
-    print("Downloading the yearly NVD CVE feeds.")
+    print("Downloading the most recent CVE data.")
 
     cve_recent_url = "https://nvd.nist.gov/feeds/json/cve/1.1/nvdcve-1.1-recent.json.zip"
     cve_recent_feed_file = ''
@@ -67,6 +65,17 @@ def sort_cve_data(cve_json_data):
                 cve_desc = cve_desc_item['value']
                 cve_dictionary[cve_id]['description'] = cve_desc
 
+        for key in cve['impact']:
+            if key == 'baseMetricV3':
+                cve_dictionary[cve_id]['exploitabilityScore'] = cve['impact']['baseMetricV3']['exploitabilityScore']
+                cve_dictionary[cve_id]['impactScore'] = cve['impact']['baseMetricV3']['impactScore']
+                cve_dictionary[cve_id]['baseScore'] = cve['impact']['baseMetricV3']['cvssV3']['baseScore']
+                cve_dictionary[cve_id]['baseSeverity'] = cve['impact']['baseMetricV3']['cvssV3']['baseSeverity']
+                cve_dictionary[cve_id]['attackVector'] = cve['impact']['baseMetricV3']['cvssV3']['attackVector']
+                cve_dictionary[cve_id]['attackComplexity'] = cve['impact']['baseMetricV3']['cvssV3']['attackComplexity']
+                cve_dictionary[cve_id]['privilegesRequired'] = cve['impact']['baseMetricV3']['cvssV3']['privilegesRequired']
+                cve_dictionary[cve_id]['userInteraction'] = cve['impact']['baseMetricV3']['cvssV3']['userInteraction']
+
     return cve_dictionary
 
 
@@ -76,18 +85,42 @@ def filter_cve_by_vendor(cve_dictionary, vendor_list):
         for cve in cve_dictionary:
             if vendor.lower() in cve_dictionary[cve]['description'].lower():
                 filtered_cves[cve] = {}
-                filtered_cves[cve]['published'] = cve_dictionary[cve]['published']
-                filtered_cves[cve]['last_modified'] = cve_dictionary[cve]['last_modified']
-                filtered_cves[cve]['description'] = cve_dictionary[cve]['description']
+                for key in cve_dictionary[cve]:
+                    filtered_cves[cve][key] = cve_dictionary[cve][key]
 
     return filtered_cves
 
 
 def output_cves(filtered_cves):
-    print("FILTERED CVEs:\n")
+    print("\nFILTERED CVEs:")
+
+    print("\nHigh Severity: ")
     for cve in filtered_cves:
-        print(cve + ":\nPublished: " + filtered_cves[cve]['published'] + "\nLast Modified: " +
-              filtered_cves[cve]['last_modified'] + "\nDescription: " + filtered_cves[cve]['description'] + "\n\n")
+        if filtered_cves[cve].get('baseSeverity') != None and filtered_cves[cve]['baseSeverity'] == 'HIGH':
+            print("\n" + cve)
+            for key in filtered_cves[cve]:
+                print(key + ": " + str(filtered_cves[cve][key]))
+
+    print("\nMedium Severity: ")
+    for cve in filtered_cves:
+        if filtered_cves[cve].get('baseSeverity') != None and filtered_cves[cve]['baseSeverity'] == 'MEDIUM':
+            print("\n" + cve)
+            for key in filtered_cves[cve]:
+                print(key + ": " + str(filtered_cves[cve][key]))
+
+    print("\nLow Severity: ")
+    for cve in filtered_cves:
+        if filtered_cves[cve].get('baseSeverity') != None and filtered_cves[cve]['baseSeverity'] == 'LOW':
+            print("\n" + cve)
+            for key in filtered_cves[cve]:
+                print(key + ": " + str(filtered_cves[cve][key]))
+
+    print("Unspecified Severity: ")
+    for cve in filtered_cves:
+        if filtered_cves[cve].get('baseSeverity') == None:
+            print("\n" + cve)
+            for key in filtered_cves[cve]:
+                print(key + ": " + str(filtered_cves[cve][key]))
 
 
 if __name__ == '__main__':
@@ -97,6 +130,7 @@ if __name__ == '__main__':
     filtered_cves = filter_cve_by_vendor(cve_dictionary, vendor_list)
     output_cves(filtered_cves)
 
+# https://nvd.nist.gov/vuln/detail/CVE-2022-23733  example vuln URL
 
 """
 example json cve format
