@@ -4,7 +4,9 @@
 # 1. Add parameters that ask for the user to specify relative time period cves should be displayed for.
 # 2. Use argparse to allow a user to specify a vendor file via command line arguments.
 # 3. Display NVD link with CVE.
-# 4. Refactor code.
+# 4. Search for vendor name within cve ASSIGNER.
+# 5. Refactor code.
+
 
 import argparse
 import datetime
@@ -14,12 +16,20 @@ import sys
 import urllib.request
 import zipfile
 
+from datetime import datetime, timedelta
 
-def read_vendor_file(vendor_filename="vendors.txt"):
+
+def read_vendor_file(vendor_filename):
     vendor_list = []
 
-    with open(vendor_filename) as vendors:
-        vendor_list = vendors.read().splitlines()
+    try:
+        if vendor_filename == None:
+            vendor_filename = 'vendors.txt'
+        with open(vendor_filename, 'r') as vendors:
+            vendor_list = vendors.read().splitlines()
+    except:
+        print("The Vendor file you specified does not exist.")
+        sys.exit()
 
     return vendor_list
 
@@ -35,7 +45,7 @@ def get_cve_data():
     try:
         with urllib.request.urlopen(cve_recent_url) as cves:
             cve_recent_feed_file = cves.read()
-        print("Successfully downloaded recent CVE feed")
+        print("Successfully downloaded recent CVE feed from NVD")
     except Exception as e:
         print(e)
         print("Error attempting to download the NVD recent CVE feed.")
@@ -50,31 +60,45 @@ def get_cve_data():
     return cve_json_data
 
 
-def sort_cve_data(cve_json_data):
+def sort_cve_data(cve_json_data, days):
+
     cve_dictionary = {}
+
+    if days == None:
+        days = 7
+    else:
+        days = int(days)
+
+    oldest_date = datetime.today() - timedelta(days=days)
+
     for cve in cve_json_data['CVE_Items']:
-        cve_id = cve['cve']['CVE_data_meta']['ID']
-        cve_pub_date = cve['publishedDate'].split('T')[0]
-        cve_last_mod = cve['lastModifiedDate'].split('T')[0]
+        cve_modified_date = datetime.strptime(
+            cve['lastModifiedDate'].split('T')[0], '%Y-%m-%d')
 
-        cve_dictionary[cve_id] = {}
-        cve_dictionary[cve_id]['published'] = cve_pub_date
-        cve_dictionary[cve_id]['last_modified'] = cve_last_mod
-        for cve_desc_item in cve['cve']['description']['description_data']:
-            if cve_desc_item['lang'] == 'en':
-                cve_desc = cve_desc_item['value']
-                cve_dictionary[cve_id]['description'] = cve_desc
+        if oldest_date <= cve_modified_date:
 
-        for key in cve['impact']:
-            if key == 'baseMetricV3':
-                cve_dictionary[cve_id]['exploitabilityScore'] = cve['impact']['baseMetricV3']['exploitabilityScore']
-                cve_dictionary[cve_id]['impactScore'] = cve['impact']['baseMetricV3']['impactScore']
-                cve_dictionary[cve_id]['baseScore'] = cve['impact']['baseMetricV3']['cvssV3']['baseScore']
-                cve_dictionary[cve_id]['baseSeverity'] = cve['impact']['baseMetricV3']['cvssV3']['baseSeverity']
-                cve_dictionary[cve_id]['attackVector'] = cve['impact']['baseMetricV3']['cvssV3']['attackVector']
-                cve_dictionary[cve_id]['attackComplexity'] = cve['impact']['baseMetricV3']['cvssV3']['attackComplexity']
-                cve_dictionary[cve_id]['privilegesRequired'] = cve['impact']['baseMetricV3']['cvssV3']['privilegesRequired']
-                cve_dictionary[cve_id]['userInteraction'] = cve['impact']['baseMetricV3']['cvssV3']['userInteraction']
+            cve_id = cve['cve']['CVE_data_meta']['ID']
+            cve_pub_date = cve['publishedDate'].split('T')[0]
+            cve_last_mod = cve['lastModifiedDate'].split('T')[0]
+
+            cve_dictionary[cve_id] = {}
+            cve_dictionary[cve_id]['published'] = cve_pub_date
+            cve_dictionary[cve_id]['last_modified'] = cve_last_mod
+            for cve_desc_item in cve['cve']['description']['description_data']:
+                if cve_desc_item['lang'] == 'en':
+                    cve_desc = cve_desc_item['value']
+                    cve_dictionary[cve_id]['description'] = cve_desc
+
+            for key in cve['impact']:
+                if key == 'baseMetricV3':
+                    cve_dictionary[cve_id]['exploitabilityScore'] = cve['impact']['baseMetricV3']['exploitabilityScore']
+                    cve_dictionary[cve_id]['impactScore'] = cve['impact']['baseMetricV3']['impactScore']
+                    cve_dictionary[cve_id]['baseScore'] = cve['impact']['baseMetricV3']['cvssV3']['baseScore']
+                    cve_dictionary[cve_id]['baseSeverity'] = cve['impact']['baseMetricV3']['cvssV3']['baseSeverity']
+                    cve_dictionary[cve_id]['attackVector'] = cve['impact']['baseMetricV3']['cvssV3']['attackVector']
+                    cve_dictionary[cve_id]['attackComplexity'] = cve['impact']['baseMetricV3']['cvssV3']['attackComplexity']
+                    cve_dictionary[cve_id]['privilegesRequired'] = cve['impact']['baseMetricV3']['cvssV3']['privilegesRequired']
+                    cve_dictionary[cve_id]['userInteraction'] = cve['impact']['baseMetricV3']['cvssV3']['userInteraction']
 
     return cve_dictionary
 
@@ -84,6 +108,7 @@ def filter_cve_by_vendor(cve_dictionary, vendor_list):
     for vendor in vendor_list:
         for cve in cve_dictionary:
             if vendor.lower() in cve_dictionary[cve]['description'].lower():
+
                 filtered_cves[cve] = {}
                 for key in cve_dictionary[cve]:
                     filtered_cves[cve][key] = cve_dictionary[cve][key]
@@ -124,9 +149,22 @@ def output_cves(filtered_cves):
 
 
 if __name__ == '__main__':
+    parser = argparse.ArgumentParser(
+        description='TrackCVE')
+    parser.add_argument(
+        '-f', '--file', help='Text file from which Vendor names are read.')
+    parser.add_argument(
+        '-d', '--days', help='Used to only display CVEs that were released x number of days in the past')
+    args = parser.parse_args()
+
+    if args.days != None:
+        if int(args.days) > 7:
+            print("Please pass a ''--days' argument value of less than 8.\nOnly 7 days of the most recent CVE data is downloaded")
+            sys.exit()
+
     cve_json_data = get_cve_data()
-    vendor_list = read_vendor_file()
-    cve_dictionary = sort_cve_data(cve_json_data)
+    vendor_list = read_vendor_file(args.file)
+    cve_dictionary = sort_cve_data(cve_json_data, args.days)
     filtered_cves = filter_cve_by_vendor(cve_dictionary, vendor_list)
     output_cves(filtered_cves)
 
