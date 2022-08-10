@@ -21,6 +21,7 @@ from datetime import datetime, timedelta
 
 def read_vendor_file(vendor_filename):
     vendor_list = []
+
     try:
         if vendor_filename == None:
             vendor_filename = 'vendors.txt'
@@ -64,17 +65,18 @@ def sort_cve_data(cve_json_data, days):
     cve_dictionary = {}
 
     if days == None:
-        days = 10
+        days = 7
     else:
         days = int(days)
 
     oldest_date = datetime.today() - timedelta(days=days)
 
-
     for cve in cve_json_data['CVE_Items']:
-        cve_modified_date = datetime.strptime(cve['lastModifiedDate'].split('T')[0], '%Y-%m-%d')
+        cve_modified_date = datetime.strptime(
+            cve['lastModifiedDate'].split('T')[0], '%Y-%m-%d')
+
         if oldest_date <= cve_modified_date:
-            print("less than or equal to")
+
             cve_id = cve['cve']['CVE_data_meta']['ID']
             cve_pub_date = cve['publishedDate'].split('T')[0]
             cve_last_mod = cve['lastModifiedDate'].split('T')[0]
@@ -106,6 +108,7 @@ def filter_cve_by_vendor(cve_dictionary, vendor_list):
     for vendor in vendor_list:
         for cve in cve_dictionary:
             if vendor.lower() in cve_dictionary[cve]['description'].lower():
+
                 filtered_cves[cve] = {}
                 for key in cve_dictionary[cve]:
                     filtered_cves[cve][key] = cve_dictionary[cve][key]
@@ -148,9 +151,16 @@ def output_cves(filtered_cves):
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
         description='TrackCVE')
-    parser.add_argument('-f', '--file', help='Text file from which Vendor names are read.')
-    parser.add_argument('-d', '--days', help='Used to only display CVEs that were released x number of days in the past')
+    parser.add_argument(
+        '-f', '--file', help='Text file from which Vendor names are read.')
+    parser.add_argument(
+        '-d', '--days', help='Used to only display CVEs that were released x number of days in the past')
     args = parser.parse_args()
+
+    if args.days != None:
+        if int(args.days) > 7:
+            print("Please pass a ''--days' argument value of less than 8.\nOnly 7 days of the most recent CVE data is downloaded")
+            sys.exit()
 
     cve_json_data = get_cve_data()
     vendor_list = read_vendor_file(args.file)
