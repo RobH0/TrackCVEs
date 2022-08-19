@@ -147,6 +147,35 @@ def output_cves(filtered_cves):
             for key in filtered_cves[cve]:
                 print(key + ": " + str(filtered_cves[cve][key]))
 
+def generate_web_report(filtered_cves, days):
+    high_sev_count = 0
+    med_sev_count = 0
+    low_sev_count = 0
+    report_details = ''
+
+    for cve in filtered_cves:
+        if filtered_cves[cve].get('baseSeverity') != None and filtered_cves[cve]['baseSeverity'] == 'HIGH':
+            high_sev_count += 1
+            report_details += '<br><br><a href="https://nvd.nist.gov/vuln/detail/' + cve + '">' + cve + '</a>: '
+            report_details += str(filtered_cves[cve]['description'])
+            print(filtered_cves[cve]['description'])
+            for key in filtered_cves[cve]:
+                break#print(key + ": " + str(filtered_cves[cve][key]))
+
+    report = '<h2>' + str(high_sev_count) + ' HIGH severity CVEs relating to your vendor list over the past ' + str(days) + ' days:</h2>\n'
+
+    report += report_details
+
+
+    try:
+        high_sev_report = 'high_sev_report.html'
+        with open(high_sev_report, 'w') as htmlfile:
+            htmlfile.write(report)
+
+        print("High severity CVE report saved to", high_sev_report)
+    except:
+        print("Error when writing to report file")
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
@@ -166,7 +195,8 @@ if __name__ == '__main__':
     vendor_list = read_vendor_file(args.file)
     cve_dictionary = sort_cve_data(cve_json_data, args.days)
     filtered_cves = filter_cve_by_vendor(cve_dictionary, vendor_list)
-    output_cves(filtered_cves)
+    #output_cves(filtered_cves)
+    generate_web_report(filtered_cves, 7)
 
 # https://nvd.nist.gov/vuln/detail/CVE-2022-23733  example vuln URL
 
