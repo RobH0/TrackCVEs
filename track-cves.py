@@ -154,7 +154,8 @@ def report_generation(filtered_cves, severity, days):
     sev_count = 0
     #severity = str(severity)
     string_severity = str(severity)
-    report_name = string_severity.lower() + '_sev_report.html'
+    report_name = string_severity.lower() + '_sev_report_'+ str(datetime.today().date()) +'.html'
+    
 
     if days == None:
         days = 7
@@ -209,7 +210,7 @@ if __name__ == '__main__':
     parser.add_argument(
         '-f', '--file', help='Text file from which Vendor names are read.')
     parser.add_argument(
-        '-d', '--days', help='Used to only display CVEs that were released x number of days in the past')
+        '-d', '--days', help='Used to only display CVEs that were released x number of days in the past.')
     args = parser.parse_args()
 
     if args.days != None:
