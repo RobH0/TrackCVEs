@@ -155,7 +155,7 @@ def report_generation(filtered_cves, severity, days):
     #severity = str(severity)
     string_severity = str(severity)
     report_name = string_severity.lower() + '_sev_report_'+ str(datetime.today().date()) +'.html'
-    
+
 
     if days == None:
         days = 7
@@ -163,9 +163,12 @@ def report_generation(filtered_cves, severity, days):
     for cve in filtered_cves:
         if filtered_cves[cve].get('baseSeverity') != None and filtered_cves[cve]['baseSeverity'] == severity:
             sev_count += 1
-            report_details += '<br><br><a href="https://nvd.nist.gov/vuln/detail/' + \
-                cve + '">' + cve + '</a>: '
+            report_details += '<br><br><b><a href="https://nvd.nist.gov/vuln/detail/' + \
+                cve + '">' + cve + '</a></b>:<br> '
+            report_details += '<b>Last modified: </b>' + filtered_cves[cve]['last_modified'] + '<br>'
             report_details += str(filtered_cves[cve]['description'])
+
+
 
 
     report = '<h2>' + str(sev_count) + ' ' + string_severity + \
@@ -224,8 +227,6 @@ if __name__ == '__main__':
     filtered_cves = filter_cve_by_vendor(cve_dictionary, vendor_list)
     # output_cves(filtered_cves)
     generate_web_reports(filtered_cves, args.days)
-
-# https://nvd.nist.gov/vuln/detail/CVE-2022-23733  example vuln URL
 
 """
 example json cve format
