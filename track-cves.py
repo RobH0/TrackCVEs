@@ -1,11 +1,10 @@
 # track-cves.py
 
 # To implement:
-# 1. Add parameters that ask for the user to specify relative time period cves should be displayed for.
-# 2. Use argparse to allow a user to specify a vendor file via command line arguments.
-# 3. Display NVD link with CVE.
-# 4. Search for vendor name within cve ASSIGNER.
-# 5. Refactor code.
+# 1. Open reports in the default browser.
+# 2. Ask user if they want to open the created reports in their default browser.
+# 3. Ask user if they want the filtered CVEs to be output to the command line.
+# 2. Refactor code.
 
 
 import argparse
@@ -16,6 +15,7 @@ import sys
 import urllib.request
 import zipfile
 import os
+import webbrowser
 
 from datetime import datetime, timedelta
 
@@ -46,7 +46,7 @@ def get_cve_data():
     try:
         with urllib.request.urlopen(cve_recent_url) as cves:
             cve_recent_feed_file = cves.read()
-        print("Successfully downloaded recent CVE feed from NVD")
+        print("Successfully downloaded recent CVE feed from NVD.\n")
     except Exception as e:
         print(e)
         print("Error attempting to download the NVD recent CVE feed.")
@@ -152,9 +152,9 @@ def output_cves(filtered_cves):
 def report_generation(filtered_cves, severity, days):
     report_details = ''
     sev_count = 0
-    #severity = str(severity)
     string_severity = str(severity)
     report_name = string_severity.lower() + '_sev_report_'+ str(datetime.today().date()) +'.html'
+    report_file_path = ''
 
 
     if days == None:
@@ -189,22 +189,38 @@ def report_generation(filtered_cves, severity, days):
     except:
         print("Error when writing to report file")
 
-
+    return report_file_path
 
 
 def generate_web_reports(filtered_cves, days):
-    high_sev_count = 0
-    med_sev_count = 0
-    low_sev_count = 0
-    high_report_details = ''
-    med_report_details = ''
-    low_report_details = ''
-    NA_report_details = ''
+    high_sev_file_path = report_generation(filtered_cves, 'HIGH', days)
+    med_sev_file_path = report_generation(filtered_cves, 'MEDIUM', days)
+    low_sev_file_path = report_generation(filtered_cves, 'LOW', days)
+    na_sev_file_path = report_generation(filtered_cves, None, days)
 
-    report_generation(filtered_cves, 'HIGH', days)
-    report_generation(filtered_cves, 'MEDIUM', days)
-    report_generation(filtered_cves, 'LOW', days)
-    report_generation(filtered_cves, None, days)
+    report_file_path_list = [high_sev_file_path, med_sev_file_path, low_sev_file_path, na_sev_file_path]
+
+    return report_file_path_list
+
+def open_reports_in_browser(reports_list):
+    correct_input = False
+    print('\n')
+
+
+    while correct_input == False:
+        user_response = input("Do you want the above reports to be open in your default browser (y/n)? ")
+
+        if user_response.lower() == 'y':
+            print("Opening reports in your default browser")
+            correct_input = True
+            for path in reports_list:
+                webbrowser.open('file://' + path)
+        elif user_response.lower() == 'n':
+            print("Exiting")
+            correct_input = True
+        else:
+            print("Invalid input!")
+
 
 
 if __name__ == '__main__':
@@ -226,7 +242,9 @@ if __name__ == '__main__':
     cve_dictionary = sort_cve_data(cve_json_data, args.days)
     filtered_cves = filter_cve_by_vendor(cve_dictionary, vendor_list)
     # output_cves(filtered_cves)
-    generate_web_reports(filtered_cves, args.days)
+    report_file_path_list = generate_web_reports(filtered_cves, args.days)
+    open_reports_in_browser(report_file_path_list)
+    sys.exit()
 
 """
 example json cve format
