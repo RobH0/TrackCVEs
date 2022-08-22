@@ -142,13 +142,16 @@ def report_generation(filtered_cves, severity, days):
         with open(report_name, 'w') as htmlfile:
             htmlfile.write(report)
 
-        # Need to check for which OS it is writing to.
-        report_file_path = os.path.dirname(
-            os.path.realpath(report_name)) + '\\' + report_name
+        if sys.platform == 'win32':
+            report_file_path = os.path.dirname(os.path.realpath(report_name)) + '\\' + report_name
+        else:
+            report_file_path = os.path.dirname(os.path.realpath(report_name)) + '/' + report_name
 
         print(string_severity + " severity CVE report saved to " + report_file_path)
     except:
         print("Error when writing to report file")
+
+
 
     return report_file_path
 
