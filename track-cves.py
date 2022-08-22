@@ -64,6 +64,7 @@ def sort_cve_data(cve_json_data, days):
 
     oldest_date = datetime.today() - timedelta(days=days)
 
+    # Loop grabs all relevent CVE data for all recent CVEs and organizes it into cve_dictionary.
     for cve in cve_json_data['CVE_Items']:
         cve_modified_date = datetime.strptime(
             cve['lastModifiedDate'].split('T')[0], '%Y-%m-%d')
@@ -95,7 +96,7 @@ def sort_cve_data(cve_json_data, days):
 
     return cve_dictionary
 
-
+# filters out CVEs that aren't related to vendors read from the vendors file.
 def filter_cve_by_vendor(cve_dictionary, vendor_list):
     filtered_cves = {}
     for vendor in vendor_list:
@@ -108,7 +109,7 @@ def filter_cve_by_vendor(cve_dictionary, vendor_list):
 
     return filtered_cves
 
-
+# generates CVE reports by severty.
 def report_generation(filtered_cves, severity, days):
     report_details = ''
     sev_count = 0
@@ -120,6 +121,7 @@ def report_generation(filtered_cves, severity, days):
     if days == None:
         days = 7
 
+    # Loop adds an entry for each vendor related CVE with a given severity.
     for cve in filtered_cves:
         if filtered_cves[cve].get('baseSeverity') != None and filtered_cves[cve]['baseSeverity'] == severity:
             sev_count += 1
@@ -135,10 +137,12 @@ def report_generation(filtered_cves, severity, days):
 
     report += report_details
 
+    # Attempts to write the html report to disk.
     try:
         with open(report_name, 'w') as htmlfile:
             htmlfile.write(report)
 
+        # Need to check for which OS it is writing to.
         report_file_path = os.path.dirname(
             os.path.realpath(report_name)) + '\\' + report_name
 
@@ -148,7 +152,7 @@ def report_generation(filtered_cves, severity, days):
 
     return report_file_path
 
-
+# Initiates the generation of the vulnerabiity reports for each severity level.
 def generate_web_reports(filtered_cves, days):
     high_sev_file_path = report_generation(filtered_cves, 'HIGH', days)
     med_sev_file_path = report_generation(filtered_cves, 'MEDIUM', days)
@@ -160,7 +164,7 @@ def generate_web_reports(filtered_cves, days):
 
     return report_file_path_list
 
-
+# Opens the CVE html reports in the default browser if the user requests this.
 def open_reports_in_browser(reports_list):
     correct_input = False
     print('\n')
@@ -183,7 +187,7 @@ def open_reports_in_browser(reports_list):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(
-        description='TrackCVE')
+        description='TrackCVE - A python script that helps you keep up to date with the latest CVEs for vendors of your choice')
     parser.add_argument(
         '-f', '--file', help='text file from which vendor names are read. If no file aurgument is passed, vendor names will be read from vendors.txt by default')
     parser.add_argument(
@@ -192,7 +196,7 @@ if __name__ == '__main__':
 
     if args.days != None:
         if int(args.days) > 7:
-            print("Please pass a ''--days' argument value of less than 8.\nOnly 7 days of the most recent CVE data is downloaded")
+            print("Please pass a '--days' argument value of less than 8.\nOnly 7 days of the most recent CVE data is downloaded")
             sys.exit()
 
     cve_json_data = get_cve_data()
@@ -201,4 +205,3 @@ if __name__ == '__main__':
     filtered_cves = filter_cve_by_vendor(cve_dictionary, vendor_list)
     report_file_path_list = generate_web_reports(filtered_cves, args.days)
     open_reports_in_browser(report_file_path_list)
-    sys.exit()
