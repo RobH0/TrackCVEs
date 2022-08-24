@@ -14,7 +14,8 @@ Usage (Linux): python3 track_cves.py [-h] [-f FILE] [-d DAYS]
 Options:
   -h, --help            show this help message and exit
   -f FILE, --file FILE  text file from which vendor names are read.
-  -d DAYS, --days DAYS  used to only display CVEs that were released x number of days in the past (default: 7).
+  -d DAYS, --days DAYS  used to only display CVEs that were
+  released x number of days in the past (default: 7).
 
 Examples:
   python track_cves.py -f vendors.txt -d 5
