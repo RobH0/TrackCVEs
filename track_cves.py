@@ -101,7 +101,7 @@ def filter_cve_by_vendor(cve_dictionary, vendor_list):
     filtered_cves = {}
     for vendor in vendor_list:
         for cve in cve_dictionary:
-            if vendor.lower() in cve_dictionary[cve]['description'].lower():
+            if vendor.lower() in cve_dictionary[cve]['description'].lower() and vendor != '':
 
                 filtered_cves[cve] = {}
                 for key in cve_dictionary[cve]:
@@ -123,7 +123,8 @@ def report_generation(filtered_cves, severity, days):
 
     # Loop adds an entry for each vendor related CVE with a given severity.
     for cve in filtered_cves:
-        if filtered_cves[cve].get('baseSeverity') != None and filtered_cves[cve]['baseSeverity'] == severity:
+        cve_string_sev = str(filtered_cves[cve].get('baseSeverity'))
+        if cve_string_sev == string_severity:
             sev_count += 1
             report_details += '<br><br><b><a href="https://nvd.nist.gov/vuln/detail/' + \
                 cve + '">' + cve + '</a></b>:<br> '
