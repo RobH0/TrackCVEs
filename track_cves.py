@@ -127,7 +127,7 @@ def report_generation(filtered_cves, severity, days):
         if cve_string_sev == string_severity:
             sev_count += 1
             report_details += '<br><br><b><a href="https://nvd.nist.gov/vuln/detail/' + \
-                cve + '">' + cve + '</a></b>:<br> '
+                cve + '" target="_blank">' + cve + '</a></b>:<br> '
             report_details += '<b>Last modified: </b>' + \
                 filtered_cves[cve]['last_modified'] + '<br>'
             report_details += str(filtered_cves[cve]['description'])
