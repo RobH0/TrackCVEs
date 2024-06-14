@@ -1,6 +1,5 @@
 # track_cves.py
 import argparse
-import datetime
 import io
 import json
 import sys
@@ -68,8 +67,9 @@ def sort_cve_data(cve_json_data, days):
     for cve in cve_json_data['CVE_Items']:
         cve_modified_date = datetime.strptime(
             cve['lastModifiedDate'].split('T')[0], '%Y-%m-%d')
+        cve_published_date = datetime.strptime(cve['publishedDate'].split('T')[0], '%Y-%m-%d')
 
-        if oldest_date <= cve_modified_date:
+        if oldest_date <= cve_modified_date or oldest_date <= cve_published_date:
 
             cve_id = cve['cve']['CVE_data_meta']['ID']
             cve_pub_date = cve['publishedDate'].split('T')[0]
@@ -126,13 +126,17 @@ def report_generation(filtered_cves, severity, days):
         cve_string_sev = str(filtered_cves[cve].get('baseSeverity'))
         if cve_string_sev == string_severity:
             sev_count += 1
-            report_details += '<br><br><b><a href="https://nvd.nist.gov/vuln/detail/' + \
-                cve + '" target="_blank">' + cve + '</a></b>:<br> '
-            report_details += '<b>Last modified: </b>' + \
-                filtered_cves[cve]['last_modified'] + '<br>'
-            report_details += str(filtered_cves[cve]['description'])
+            report_details += '<h2><a href="https://nvd.nist.gov/vuln/detail/' + \
+                cve + '" target="_blank">' + cve + '</a></h2>'
+            report_details += '<h4>Last modified: </h4>' + \
+                '<span>' + filtered_cves[cve]['last_modified'] + '</span>'
+            report_details += '<h4>Published:</h4>' + \
+                '<span>' + filtered_cves[cve]['published'] + '</span>'
+            report_details += '<p>' + str(filtered_cves[cve]['description']) +'</p>'
 
-    report = '<h2>' + str(sev_count) + ' ' + string_severity + \
+    report = '<h1>' + string_severity + ' Severity CVE Report</h1>'
+    
+    report += '<h2>' + str(sev_count) + ' ' + string_severity + \
         ' severity CVEs relating to your vendor list over the past ' + \
         str(days) + ' days:</h2>\n'
 
