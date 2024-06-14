@@ -127,21 +127,32 @@ def report_generation(filtered_cves, severity, days):
         cve_string_sev = str(filtered_cves[cve].get('baseSeverity'))
         if cve_string_sev == string_severity:
             sev_count += 1
-            report_details += '<h2><a href="https://nvd.nist.gov/vuln/detail/' + \
-                cve + '" target="_blank">' + cve + '</a></h2>'
-            report_details += '<h4>Last modified: </h4>' + \
-                '<span>' + filtered_cves[cve]['last_modified'] + '</span>'
-            report_details += '<h4>Published:</h4>' + \
-                '<span>' + filtered_cves[cve]['published'] + '</span>'
-            report_details += '<p>' + str(filtered_cves[cve]['description']) +'</p>'
+            report_details += '<div class="cve-container"><h3><a href="https://nvd.nist.gov/vuln/detail/' + \
+                cve + '" target="_blank">' + cve + '</a></h3>'
+            report_details += '<div class="date-container"><h4>Last modified: </h4>' + \
+                '<span>' + filtered_cves[cve]['last_modified'] + '</span></div>'
+            report_details += '<div class="date-container"><h4>Published:</h4>' + \
+                '<span>' + filtered_cves[cve]['published'] + '</span></div>'
+            report_details += '<h4>Description:</h4><p>' + str(filtered_cves[cve]['description']) +'</p></div>'
 
-    report = '<h1>' + string_severity + ' Severity CVE Report</h1>'
+
+    report = """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>"""
+
+    report += '<h1>' + string_severity + ' Severity CVE Report</h1>'
     
     report += '<h2>' + str(sev_count) + ' ' + string_severity + \
         ' severity CVEs relating to your vendor list over the past ' + \
         str(days) + ' days:</h2>\n'
 
     report += report_details
+    report += '</body>'
 
     # Attempts to write the html reports to disk.
     try:

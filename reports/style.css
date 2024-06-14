@@ -1,0 +1,19 @@
+h1, h2{
+    text-align: center;
+}
+
+h4, p{
+    margin: 0.25em 5px 0.25em 0;
+}
+
+.cve-container{
+    display: flex;
+    flex-direction: column;
+    
+    margin: 0 20% 0 20%;
+}
+
+.date-container{
+    display: flex;
+    align-items: baseline;
+}
