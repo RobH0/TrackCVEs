@@ -1,6 +1,5 @@
 # track_cves.py
 import argparse
-import datetime
 import io
 import json
 import sys
@@ -68,8 +67,9 @@ def sort_cve_data(cve_json_data, days):
     for cve in cve_json_data['CVE_Items']:
         cve_modified_date = datetime.strptime(
             cve['lastModifiedDate'].split('T')[0], '%Y-%m-%d')
+        cve_published_date = datetime.strptime(cve['publishedDate'].split('T')[0], '%Y-%m-%d')
 
-        if oldest_date <= cve_modified_date:
+        if oldest_date <= cve_modified_date or oldest_date <= cve_published_date:
 
             cve_id = cve['cve']['CVE_data_meta']['ID']
             cve_pub_date = cve['publishedDate'].split('T')[0]
@@ -117,6 +117,7 @@ def report_generation(filtered_cves, severity, days):
     report_name = string_severity.lower() + '_sev_report_' + \
         str(datetime.today().date()) + '.html'
     report_file_path = ''
+    relative_path_report = ''
 
     if days == None:
         days = 7
@@ -126,33 +127,51 @@ def report_generation(filtered_cves, severity, days):
         cve_string_sev = str(filtered_cves[cve].get('baseSeverity'))
         if cve_string_sev == string_severity:
             sev_count += 1
-            report_details += '<br><br><b><a href="https://nvd.nist.gov/vuln/detail/' + \
-                cve + '">' + cve + '</a></b>:<br> '
-            report_details += '<b>Last modified: </b>' + \
-                filtered_cves[cve]['last_modified'] + '<br>'
-            report_details += str(filtered_cves[cve]['description'])
+            report_details += '<div class="cve-container"><h3><a href="https://nvd.nist.gov/vuln/detail/' + \
+                cve + '" target="_blank">' + cve + '</a></h3>'
+            report_details += '<div class="date-container"><h4>Last modified: </h4>' + \
+                '<span>' + filtered_cves[cve]['last_modified'] + '</span></div>'
+            report_details += '<div class="date-container"><h4>Published:</h4>' + \
+                '<span>' + filtered_cves[cve]['published'] + '</span></div>'
+            report_details += '<h4>Description:</h4><p>' + str(filtered_cves[cve]['description']) +'</p></div>'
 
-    report = '<h2>' + str(sev_count) + ' ' + string_severity + \
+
+    report = """<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>"""
+
+    report += '<h1>' + string_severity + ' Severity CVE Report</h1>'
+    
+    report += '<h2>' + str(sev_count) + ' ' + string_severity + \
         ' severity CVEs relating to your vendor list over the past ' + \
         str(days) + ' days:</h2>\n'
 
     report += report_details
+    report += '</body>'
 
-    # Attempts to write the html report to disk.
+    # Attempts to write the html reports to disk.
     try:
-        with open(report_name, 'w') as htmlfile:
+        current_dir = os.getcwd()
+        reports_folder = 'reports'
+        reports_folder = os.path.join(current_dir, reports_folder)
+
+        if not os.path.exists(reports_folder):
+            print('creating /reports/ directory')
+            os.makedirs(reports_folder)
+
+        report_file_path = os.path.join(reports_folder, report_name)
+
+        with open(report_file_path, 'w') as htmlfile:
             htmlfile.write(report)
 
-        if sys.platform == 'win32':
-            report_file_path = os.path.dirname(os.path.realpath(report_name)) + '\\' + report_name
-        else:
-            report_file_path = os.path.dirname(os.path.realpath(report_name)) + '/' + report_name
-
         print(string_severity + " severity CVE report saved to " + report_file_path)
-    except:
-        print("Error when writing to report file")
-
-
+    except Exception as e:
+        print("Error when writing to report file\n" + e)
 
     return report_file_path
 
