@@ -117,6 +117,7 @@ def report_generation(filtered_cves, severity, days):
     report_name = string_severity.lower() + '_sev_report_' + \
         str(datetime.today().date()) + '.html'
     report_file_path = ''
+    relative_path_report = ''
 
     if days == None:
         days = 7
@@ -142,21 +143,24 @@ def report_generation(filtered_cves, severity, days):
 
     report += report_details
 
-    # Attempts to write the html report to disk.
+    # Attempts to write the html reports to disk.
     try:
-        with open(report_name, 'w') as htmlfile:
+        current_dir = os.getcwd()
+        reports_folder = 'reports'
+        reports_folder = os.path.join(current_dir, reports_folder)
+
+        if not os.path.exists(reports_folder):
+            print('creating /reports/ directory')
+            os.makedirs(reports_folder)
+
+        report_file_path = os.path.join(reports_folder, report_name)
+
+        with open(report_file_path, 'w') as htmlfile:
             htmlfile.write(report)
 
-        if sys.platform == 'win32':
-            report_file_path = os.path.dirname(os.path.realpath(report_name)) + '\\' + report_name
-        else:
-            report_file_path = os.path.dirname(os.path.realpath(report_name)) + '/' + report_name
-
         print(string_severity + " severity CVE report saved to " + report_file_path)
-    except:
-        print("Error when writing to report file")
-
-
+    except Exception as e:
+        print("Error when writing to report file\n" + e)
 
     return report_file_path
 
