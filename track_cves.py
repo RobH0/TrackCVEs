@@ -222,6 +222,15 @@ if __name__ == '__main__':
             print("Please pass a '--days' argument value of less than 8.\nOnly 7 days of the most recent CVE data is downloaded")
             sys.exit()
 
+    print("""
+  _______             _     _______      ________     
+ |__   __|           | |   / ____\\ \\    / /  ____|    
+    | |_ __ __ _  ___| | _| |     \\ \\  / /| |__   ___ 
+    | | '__/ _` |/ __| |/ / |      \\ \\/ / |  __| / __|
+    | | | | (_| | (__|   <| |____   \\  /  | |____\\__ \\
+    |_|_|  \\__,_|\\___|_|\\_\\______|   \\/   |______|___/
+                                                      
+    """)
     cve_json_data = get_cve_data()
     vendor_list = read_vendor_file(args.file)
     cve_dictionary = sort_cve_data(cve_json_data, args.days)
