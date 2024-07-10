@@ -4,6 +4,8 @@ A python script that helps keep you up to date with the most recent CVEs for spe
 
 The script filters CVEs by vendor names and organises them into HIGH, MEDIUM, and LOW severity HTML reports.
 
+![](https://github.com/RobH0/project-gifs/blob/main/TrackCVEs-preview.gif)
+
 ## Usage
 Running the script:
 ```
