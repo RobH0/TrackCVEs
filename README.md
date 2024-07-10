@@ -1,4 +1,4 @@
-# TrackCVE
+# TrackCVEs
 
 A python script that helps keep you up to date with the most recent CVEs for specific vendors that are relevant to you or your organisation.
 
